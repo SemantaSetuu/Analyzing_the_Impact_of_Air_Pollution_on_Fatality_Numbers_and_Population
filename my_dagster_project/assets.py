@@ -148,3 +148,4 @@ def fetching_data_from_postgres2(context, insert_data_into_postgres2):
     except Exception as e:
         context.log.error(f"Error fetching data from PostgreSQL: {e}")
         raise
+#for testing
