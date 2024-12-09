@@ -3,11 +3,6 @@ import pandas as pd
 import numpy as np
 from pymongo import MongoClient
 import json
-from sklearn.model_selection import train_test_split, cross_val_score
-from sklearn.preprocessing import StandardScaler
-from sklearn.neighbors import KNeighborsRegressor
-from sklearn.metrics import mean_squared_error, r2_score
-from sklearn.metrics import classification_report
 from dagster import asset, resource, Output, MetadataValue, OutputContext
 from dagster import Output, OpDefinition
 import matplotlib.pyplot as plt
@@ -585,7 +580,6 @@ def visualize_stacked_area_chart(context, saving_transformed_data_in_sql3):
         context.log.error(f"Error during visualize_stacked_area_chart: {e}")
         raise Exception(f"Error during visualize_stacked_area_chart: {e}")
 
-
 @asset
 def plot_multi_line_chart(context, saving_transformed_data_in_sql3):
     try:
@@ -623,48 +617,6 @@ def plot_multi_line_chart(context, saving_transformed_data_in_sql3):
     except Exception as e:
         context.log.error(f"Error during multi-line chart visualization: {e}")
         raise Exception(f"Error during multi-line chart visualization: {e}")
-
-
-# @asset
-# def plot_multi_line_chart(context, saving_transformed_data_in_sql3, factor="Outdoor air pollution", countries=None):
-#     try:
-#         engine = create_engine(DB_URI)
-#         query = f"SELECT * FROM {saving_transformed_data_in_sql3['table']}"
-#         df_extracted = pd.read_sql(query, engine)
-#         required_columns = ["Year", "Entity", factor]
-#         if not all(col in df_extracted.columns for col in required_columns):
-#             raise ValueError(f"Data is missing required columns: {required_columns}")
-#         if countries:
-#             df_extracted = df_extracted[df_extracted["Entity"].isin(countries)]
-#         pivot_data = df_extracted.pivot(index="Year", columns="Entity", values=factor).reset_index()
-#         plt.figure(figsize=(12, 8))
-#         for country in pivot_data.columns[1:]:
-#             plt.plot(pivot_data["Year"], pivot_data[country], label=country)
-#         plt.title(f"Multi-Line Chart: {factor} Trends Across Countries", fontsize=14)
-#         plt.xlabel("Year", fontsize=12)
-#         plt.ylabel(factor, fontsize=12)
-#         plt.legend(title="Country", loc="upper left")
-#         plt.tight_layout()
-#         graph_path = "C:/Users/wasit/AP_Project/graph/plot_multi_line_chart.png"
-#         plt.savefig(graph_path)
-#         plt.close()
-#         context.log.info(f"Multi-Line Chart visualization for {factor} completed successfully.")
-#         context.log.info(f"Visualization saved at: {graph_path}")
-#         graph_paths = [
-#             {'graph_name': 'plot_multi_line_chart', 'graph_path': graph_path}
-#         ]
-#         df_graph_paths = pd.DataFrame(graph_paths)
-#         try:
-#             df_graph_paths.to_sql('Graph', engine, if_exists='append', index=False)
-#             context.log.info("Graph paths successfully saved into the Graph table in PostgreSQL.")
-#         except SQLAlchemyError as e:
-#             context.log.error(f"Error inserting graph paths into PostgreSQL: {e}")
-#             raise Exception(f"Error inserting graph paths into PostgreSQL: {e}")
-#         return graph_path
-#     except Exception as e:
-#         context.log.error(f"Error during multi-line chart visualization: {e}")
-#         raise Exception(f"Error during multi-line chart visualization: {e}")
-
 
 @asset
 def preparing_data_for_merging_data(context, saving_transformed_data_in_sql, saving_transformed_data_in_sql2,
@@ -709,7 +661,7 @@ def merging_data(context, preparing_data_for_merging_data):
 
     merged_df1 = pd.merge(gab_df, worldcities_df, on='country', how='inner')
     final_merged_df = pd.merge(merged_df1, death_df, on='country', how='inner')
-    return {'merge': final_merged_df}
+    return {'merge': fal_merged_df}
 
 
 @asset
@@ -838,31 +790,3 @@ def generate_html_report(context, plot_avg_country_aqi,
         context.log.error(f"Error generating HTML report: {e}")
         raise Exception(f"Error generating HTML report: {e}")
 
-# @asset
-# def knn_classifer(context, saving_transformed_data_in_sql):
-#     engine = create_engine(DB_URI)
-#     query = f"SELECT * FROM {saving_transformed_data_in_sql['table']}"
-#     df_extracted = pd.read_sql(query, engine)
-#     try:
-#         features = df_extracted[['co_aqi_value', 'ozone_aqi_value', 'no2_aqi_value', 'pm2.5_aqi_value']]
-#         target = df_extracted['aqi_category']
-#         X_train, X_test, y_train, y_test = train_test_split(features, target, test_size=0.2, random_state=42)
-#         scaler = StandardScaler()
-#         X_train = scaler.fit_transform(X_train)
-#         X_test = scaler.transform(X_test)
-#         knn = KNeighborsRegressor(n_neighbors=5)
-#         cross_val = cross_val_score(knn, X_train, y_train, cv=5)
-#         context.log.info(f"Cross-validation results: {cross_val}")
-#         context.log.info(f"Mean Cross-Validation Score: {np.mean(cross_val)}")
-#         knn.fit(X_train, y_train)
-#         y_pred = knn.predict(X_test)
-#         mse = mean_squared_error(y_test, y_pred)
-#         r2 = r2_score(y_test, y_pred)
-#         context.log.info("KNN Model Evaluation:")
-#         context.log.info(f"Mean Squared Error: {mse}")
-#         context.log.info(f"R^2 Score: {r2}")
-#         return {"mean_squared_error": mse, "r2_score": r2}
-
-#     except Exception as e:
-#         context.log.error(f"Error during KNN model training or evaluation: {e}")
-#         raise Exception(f"Error during KNN model training or evaluation: {e}")
